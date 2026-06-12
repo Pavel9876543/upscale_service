@@ -1,0 +1,28 @@
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  web:
+    build: .
+    command: flask --app app:app run --host=0.0.0.0 --port=5000
+    ports:
+      - "5000:5000"
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      BROKER_URL: redis://redis:6379/0
+      RESULT_BACKEND: redis://redis:6379/0
+      MAX_CONTENT_LENGTH: 10485760
+    depends_on:
+      - redis
+
+  worker:
+    build: .
+    command: celery -A tasks.celery worker --loglevel=info --concurrency=1
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      BROKER_URL: redis://redis:6379/0
+      RESULT_BACKEND: redis://redis:6379/0
+    depends_on:
+      - redis
