@@ -1,12 +1,9 @@
-from pathlib import Path
 from threading import Lock
 
 import cv2
 import numpy as np
-from cv2 import dnn_superres
 
-
-MODEL_PATH = Path(__file__).resolve().parent / "EDSR_x2.pb"
+from config import MODEL_PATH
 
 _scaler = None
 _scaler_lock = Lock()
@@ -27,7 +24,13 @@ def get_scaler():
                         f"Model file not found: {MODEL_PATH}. "
                         "Run scripts/download_model.sh or place EDSR_x2.pb in the project root."
                     )
-                scaler = dnn_superres.DnnSuperResImpl_create()
+                if not hasattr(cv2, "dnn_superres"):
+                    raise RuntimeError(
+                        "OpenCV dnn_superres module is not available. "
+                        "Install opencv-contrib-python-headless."
+                    )
+
+                scaler = cv2.dnn_superres.DnnSuperResImpl_create()
                 scaler.readModel(str(MODEL_PATH))
                 scaler.setModel("edsr", 2)
                 _scaler = scaler

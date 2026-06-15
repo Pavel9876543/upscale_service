@@ -1,4 +1,3 @@
-import os
 import uuid
 from io import BytesIO
 
@@ -6,11 +5,9 @@ import redis
 from celery.result import AsyncResult
 from flask import Flask, jsonify, request, send_file, url_for
 
-from tasks import UPLOAD_TTL_SECONDS, celery, upscale_task
-
-
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", str(10 * 1024 * 1024)))
+from config import MAX_CONTENT_LENGTH, REDIS_URL, UPLOAD_TTL_SECONDS
+from image_validation import validate_allowed_image_type
+from tasks import celery, upscale_task
 
 storage = redis.from_url(REDIS_URL)
 
@@ -33,6 +30,11 @@ def create_app() -> Flask:
 
         if not image_bytes:
             return jsonify({"error": "File is empty"}), 400
+
+        try:
+            validate_allowed_image_type(image_bytes)
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
 
         upload_id = uuid.uuid4().hex
         storage.setex(f"upload:{upload_id}", UPLOAD_TTL_SECONDS, image_bytes)

@@ -1,18 +1,15 @@
-import os
 import uuid
 
 import redis
 from celery import Celery
 
+from config import (
+    BROKER_URL,
+    PROCESSED_TTL_SECONDS,
+    REDIS_URL,
+    RESULT_BACKEND,
+)
 from upscale import upscale_bytes
-
-
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-BROKER_URL = os.getenv("BROKER_URL", REDIS_URL)
-RESULT_BACKEND = os.getenv("RESULT_BACKEND", REDIS_URL)
-
-UPLOAD_TTL_SECONDS = int(os.getenv("UPLOAD_TTL_SECONDS", "3600"))
-PROCESSED_TTL_SECONDS = int(os.getenv("PROCESSED_TTL_SECONDS", "86400"))
 
 celery = Celery(
     "upscale_tasks",

@@ -6,3 +6,4 @@ pytest.ini
 .venv/
 venv/
 .idea/
+result.png
